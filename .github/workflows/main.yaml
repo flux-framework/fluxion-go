@@ -1,0 +1,47 @@
+name: test fluxion-go
+
+# This will be expanded for more robust testing
+# right now we build and run the main test command
+# and test the package "types" directory
+
+on:
+  pull_request: []
+
+jobs:
+  test:
+    name: Test fluxion-go
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        test: [["fluxrm/flux-sched:bookworm", "0.32.0"]]
+
+    container:
+      image: ${{ matrix.test[0] }}
+      options: --user root
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: ^1.19
+    # TODO: do we want this to be for different versions? Need to coincide with container bases
+    # We also want the reapi_cli.so to be built by default
+    - name: flux-sched build
+      env: 
+        version: ${{ matrix.test[1] }}
+      run: |
+       git clone https://github.com/flux-framework/flux-sched /opt/flux-sched
+       export FLUX_SCHED_VERSION=${version}
+       cd /opt/flux-sched
+       ./autogen.sh
+       ./configure --prefix=/usr
+       make && make install  
+       ls /usr/lib/flux
+    
+    - name: Build
+      run: make build
+    - name: Test Binary
+      run: make test-binary
+    - name: Test Modules
+      run: make test-modules

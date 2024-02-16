@@ -15,8 +15,7 @@ import "C"
 import (
 	"fmt"
 	"unsafe"
-
-	"github.com/flux-framework/flux-sched/resource/reapi/bindings/go/src/pkg/types"
+	"github.com/flux-framework/fluxion-go/pkg/types"
 )
 
 type (

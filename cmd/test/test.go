@@ -15,8 +15,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/flux-framework/flux-sched/resource/reapi/bindings/go/src/fluxcli"
-	"github.com/flux-framework/flux-sched/resource/reapi/bindings/go/src/pkg/types"
+	"github.com/flux-framework/fluxion-go/pkg/fluxcli"
+	"github.com/flux-framework/fluxion-go/pkg/types"
 )
 
 func main() {
