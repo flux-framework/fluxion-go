@@ -6,12 +6,15 @@ JOBSPECS ?= $(HERE)/cmd/test/data/jobspecs
 # This assumes a build in the .devcontainer Dockerfile environment
 FLUX_SCHED_ROOT ?= /opt/flux-sched
 INSTALL_PREFIX ?= /usr
+
+# Needed to distinguish /usr/lib and /usr/lib54
+LIB_PREFIX ?= /usr/lib
 COMMONENVVAR=GOOS=$(shell uname -s | tr A-Z a-z)
-LD_LIBRARY_PATH=/usr/lib:/usr/lib/flux:/usr/local/lib:/usr/local/lib/flux
 
-BUILDENVVAR=CGO_CFLAGS="-I${FLUX_SCHED_ROOT} -I${FLUX_SCHED_ROOT}/resource/reapi/bindings/c" CGO_LDFLAGS="-L${INSTALL_PREFIX}/lib -L${INSTALL_PREFIX}/lib/flux -L${FLUX_SCHED_ROOT}/resource/reapi/bindings -lreapi_cli -lflux-idset -lstdc++ -lczmq -ljansson -lhwloc -lboost_system -lflux-hostlist -lboost_graph -lyaml-cpp"
-# BUILDENVAR=CGO_CFLAGS="${CGO_CFLAGS}" CGO_LDFLAGS='${CGO_LIBRARY_FLAGS}' go build -ldflags '-w'
+# Note that el8 and derivatives are in /usr/lib64
+LD_LIBRARY_PATH=$(LIB_PREFIX):$(LIB_PREFIX)/flux
 
+BUILDENVVAR=CGO_CFLAGS="-I${FLUX_SCHED_ROOT} -I${FLUX_SCHED_ROOT}/resource/reapi/bindings/c" CGO_LDFLAGS="-L${LIB_PREFIX} -L${LIB_PREFIX}/flux -L${FLUX_SCHED_ROOT}/resource/reapi/bindings -lreapi_cli -lflux-idset -lstdc++ -lczmq -ljansson -lhwloc -lboost_system -lflux-hostlist -lboost_graph -lyaml-cpp"
 
 .PHONY: all
 all: build

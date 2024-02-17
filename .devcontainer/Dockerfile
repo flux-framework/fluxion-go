@@ -1,4 +1,4 @@
-FROM fluxrm/flux-sched:bookworm
+FROM fluxrm/flux-sched:bookworm-amd64
 
 LABEL maintainer="Vanessasaurus <@vsoch>"
 
@@ -17,13 +17,7 @@ RUN wget https://go.dev/dl/go1.19.10.linux-amd64.tar.gz  && tar -xvf go1.19.10.l
          mv go /usr/local && rm go1.19.10.linux-amd64.tar.gz
 ENV PATH=$PATH:/usr/local/go/bin:/home/vscode/go/bin
 
-RUN git clone https://github.com/flux-framework/flux-sched /opt/flux-sched && \
-    cd /opt/flux-sched && \
-    git fetch && \
-    export FLUX_SCHED_VERSION=0.58.0 && \
-    ./autogen.sh && \
-    ./configure --prefix=/usr && \
-    make && make install
+RUN git clone https://github.com/flux-framework/flux-sched /opt/flux-sched
 
 # Add the group and user that match our ids
 RUN groupadd -g ${USER_GID} ${USERNAME} && \
