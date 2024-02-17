@@ -28,7 +28,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Setup Go
-      uses: actions/setup-go@v3
+      uses: actions/setup-go@v4
       with:
         go-version: ^1.19
 
@@ -81,7 +81,7 @@ jobs:
         if: (steps.check.outputs.version != '' && github.event_name != 'pull_request')
         uses: softprops/action-gh-release@v1
         with:
-          name: goshare ${{ steps.check.outputs.version }}
+          name: fluxion-go ${{ steps.check.outputs.version }}
           tag_name: ${{ steps.check.outputs.version }}
           body: "fluxion-go ${{ steps.check.outputs.version }}"
         env:
