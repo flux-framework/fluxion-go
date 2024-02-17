@@ -1,0 +1,88 @@
+name: release fluxion-go
+on:
+  # Ensure we can trigger on demand
+  workflow_dispatch:
+  pull_request: []
+
+  # schedule runs on default branch
+  schedule:
+    - cron:  '0 4 * * *'
+
+jobs:
+
+  # We always test before release
+  test:
+    name: Test fluxion-go
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        test: [["fluxrm/flux-sched:jammy", "/usr/lib"],
+               ["fluxrm/flux-sched:fedora38", "/usr/lib64"],
+               ["fluxrm/flux-sched:bookworm-amd64", "/usr/lib"],
+               ["fluxrm/flux-sched:el8", "/usr/lib64"]]
+
+    container:
+      image: ${{ matrix.test[0] }}
+      options: --user root
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: ^1.19
+
+    - name: flux-sched build
+      run: git clone https://github.com/flux-framework/flux-sched /opt/flux-sched    
+    - name: Build
+      run: LIB_PREFIX=${{ matrix.test[1] }} make build
+    - name: Test
+      run: LIB_PREFIX=${{ matrix.test[1] }} make test
+
+  release:
+    runs-on: ubuntu-latest
+    needs: [test]
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check for New Releases
+        id: check
+        env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python -m pip install requests
+          python .github/scripts/check-upstream-release.py --repo flux-framework/flux-sched
+
+      - name: Commit latest release version
+        if: (steps.check.outputs.version != '' && github.event_name != 'pull_request')
+        env:
+          version: ${{ steps.check.outputs.version }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Found new version ${version}"
+          export BRANCH_FROM="release/${package}-${version}"
+          git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git branch
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@users.noreply.github.com"
+          git config --global pull.rebase true
+          git add VERSION
+          if git diff-index --quiet HEAD --; then
+              printf "No changes\n"
+          else
+             printf "Changes\n"
+             today=$(date '+%Y-%m-%d')
+             git commit -a -m "Update for release ${today}" -m "Signed-off-by: github-actions <github-actions@users.noreply.github.com>"  
+             git push origin main
+          fi
+    
+      - name: Release
+        if: (steps.check.outputs.version != '' && github.event_name != 'pull_request')
+        uses: softprops/action-gh-release@v1
+        with:
+          name: goshare ${{ steps.check.outputs.version }}
+          tag_name: ${{ steps.check.outputs.version }}
+          body: "fluxion-go ${{ steps.check.outputs.version }}"
+        env:
+          GITHUB_REPOSITORY: flux-framework/fluxion-go
