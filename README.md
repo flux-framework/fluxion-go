@@ -35,7 +35,25 @@ make test-binary
 make test-modules
 ```
 
-More work and updates will be coming soon.
+## Docker 
+
+In addition to the developer environment, we provide an automated build with the [Dockerfile](Dockerfile) here
+that will give you a containerized environment with Go, the bindings, and flux-sched. You can pull the repository
+from our package registry, or build on your own:
+
+```bash
+docker build -t ghcr.io/flux-framework/fluxion-go .
+docker run -it ghcr.io/flux-framework/fluxion-go
+```
+
+Then you can build, and test.
+
+```bash
+make
+make test
+```
+
+Have fun! 🧞‍♀️️
 
 #### License
 
