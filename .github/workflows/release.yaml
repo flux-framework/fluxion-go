@@ -30,7 +30,7 @@ jobs:
     - name: Setup Go
       uses: actions/setup-go@v4
       with:
-        go-version: ^1.19
+        go-version: ^1.21
 
     - name: flux-sched build
       run: git clone https://github.com/flux-framework/flux-sched /opt/flux-sched    
