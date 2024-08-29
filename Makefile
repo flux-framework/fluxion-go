@@ -14,7 +14,7 @@ COMMONENVVAR=GOOS=$(shell uname -s | tr A-Z a-z)
 # Note that el8 and derivatives are in /usr/lib64
 LD_LIBRARY_PATH=$(LIB_PREFIX):$(LIB_PREFIX)/flux
 
-BUILDENVVAR=CGO_CFLAGS="-I${FLUX_SCHED_ROOT} -I${FLUX_SCHED_ROOT}/resource/reapi/bindings/c" CGO_LDFLAGS="-L${LIB_PREFIX} -L${LIB_PREFIX}/flux -L${FLUX_SCHED_ROOT}/resource/reapi/bindings -lreapi_cli -lflux-idset -lstdc++ -ljansson -lhwloc -lboost_system -lflux-hostlist -lboost_graph -lyaml-cpp"
+BUILDENVVAR=CGO_CFLAGS="-I${FLUX_SCHED_ROOT} -I${FLUX_SCHED_ROOT}/resource/reapi/bindings/c" CGO_LDFLAGS="-L${LIB_PREFIX} -L${LIB_PREFIX}/flux -L${FLUX_SCHED_ROOT}/resource/reapi/bindings -lreapi_cli -lflux-idset -lstdc++ -ljansson -lhwloc -lflux-hostlist -lboost_graph -lyaml-cpp"
 
 .PHONY: all
 all: build
