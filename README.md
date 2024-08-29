@@ -11,7 +11,7 @@ make
 ```
 ```console
 mkdir -p /workspaces/fluxion-go/bin
-GOOS=linux CGO_CFLAGS="-I/opt/flux-sched -I/opt/flux-sched/resource/reapi/bindings/c" CGO_LDFLAGS="-L/usr/lib -L/usr/lib/flux -L/opt/flux-sched/resource/reapi/bindings -lreapi_cli -lflux-idset -lstdc++ -lczmq -ljansson -lhwloc -lboost_system -lflux-hostlist -lboost_graph -lyaml-cpp" go build -ldflags '-w' -o /workspaces/fluxion-go/bin/test cmd/test/test.go
+GOOS=linux CGO_CFLAGS="-I/opt/flux-sched -I/opt/flux-sched/resource/reapi/bindings/c" CGO_LDFLAGS="-L/usr/lib -L/usr/lib/flux -L/opt/flux-sched/resource/reapi/bindings -lreapi_cli -lflux-idset -lstdc++ -lczmq -ljansson -lhwloc -lflux-hostlist -lboost_graph -lyaml-cpp" go build -ldflags '-w' -o /workspaces/fluxion-go/bin/test cmd/test/test.go
 ```
 
 If you need to customize the flux install prefix or the location (root) of the flux-sched repository (with header files):
