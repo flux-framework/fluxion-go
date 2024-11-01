@@ -20,7 +20,7 @@ RUN wget https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz  && tar -xvf go${G
 ENV PATH=$PATH:/usr/local/go/bin:/home/vscode/go/bin
 
 # Testing grow/shrink from custom branch
-RUN git clone -b debug-resource-error-messages https://github.com/researchapps/flux-sched /opt/flux-sched
+RUN git clone -b add-shrink https://github.com/researchapps/flux-sched /opt/flux-sched
 # RUN git clone https://github.com/flux-framework/flux-sched /opt/flux-sched
 
 # We also need to rebuild into the system install
