@@ -1,6 +1,7 @@
 HERE ?= $(shell pwd)
 LOCALBIN ?= $(shell pwd)/bin
 JGF ?= $(HERE)/cmd/test/data/tiny.json
+GROWJGF ?= $(HERE)/cmd/test/data/grow/new-nodes.json
 JOBSPECS ?= $(HERE)/cmd/test/data/jobspecs
 
 # This assumes a build in the .devcontainer Dockerfile environment
@@ -27,8 +28,8 @@ test-modules:
 	go test -v ./pkg/types
 
 .PHONY: test-binary
-test-binary: 	
-	LD_LIBRARY_PATH=$(LD_LIBRARY_PATH) $(LOCALBIN)/test --jgf=$(JGF) --jobspec=$(JOBSPECS)/test001.yaml
+test-binary: build
+	LD_LIBRARY_PATH=$(LD_LIBRARY_PATH) $(LOCALBIN)/test --jgf=$(JGF) --grow=$(GROWJGF) --jobspec=$(JOBSPECS)
 
 # test001_desc="match allocate 1 slot: 1 socket: 1 core (pol=default)"
 # test_expect_success "${test001_desc}" '

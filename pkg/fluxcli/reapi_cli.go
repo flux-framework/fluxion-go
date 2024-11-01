@@ -220,6 +220,23 @@ func (cli *ReapiClient) UpdateAllocate(jobid int, r string) (at int64, overhead 
 	return at, overhead, r_out, err
 }
 
+// Update the resource state with R.
+//
+//	\param h   Opaque handle. How it is used is an implementation
+//		       detail. However, when it is used within a Flux's
+//	           service module, it is expected to be a pointer
+//			           to a flux_t object.
+//	\param R_subgraph R String
+//	\return          0 on success; -1 on error.
+//	int reapi_cli_grow (reapi_cli_ctx_t *ctx, const char *R_subgraph);
+func (cli *ReapiClient) Grow(rSubgraph string) (err error) {
+	var resources = C.CString(rSubgraph)
+	defer C.free(unsafe.Pointer(resources))
+
+	fluxerr := (int)(C.reapi_cli_grow((*C.struct_reapi_cli_ctx)(cli.ctx), resources))
+	return retvalToError(fluxerr, "issue resource api client grow")
+}
+
 // Cancel cancels the allocation or reservation corresponding to jobid.
 //
 //	\param jobid     jobid of the uint64_t type.
