@@ -173,6 +173,25 @@ func main() {
 		log.Fatalf("Error in ReapiClient MatchSatisfy - asking for 4 nodes should now succeed: %v\n", err)
 	}
 
+	// Shrink (remove subgraph) for node2
+	fmt.Println("🥕 Asking to Shrink from 4 to 3 Nodes")
+	err = cli.Shrink("/tiny0/rack0/node2")
+	if err != nil {
+		log.Fatalf("Error in ReapiClient Shrink: %s %s\n", err, cli.GetErrMsg())
+	}
+	fmt.Printf("Shrink request return value: %v\n", err)
+
+	fmt.Println("Asking to MatchSatisfy 4 nodes (again, not possible)")
+	sat, overhead, err = cli.MatchSatisfy(growJobspec)
+	checkErrors(cli)
+	if err != nil {
+		log.Fatalf("Error in ReapiClient MatchSatisfy: %v\n", err)
+	}
+	printSatOutput(sat, err)
+	if sat {
+		log.Fatalf("Error in ReapiClient MatchSatisfy - asking for 4 nodes with only 3 should fail: %v\n", err)
+	}
+
 }
 
 func printOutput(reserved bool, allocated string, at int64, jobid uint64, err error) {

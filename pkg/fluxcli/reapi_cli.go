@@ -10,16 +10,18 @@
 
 package fluxcli
 
-/*
-#include "resource/reapi/bindings/c/reapi_cli.h"
-*/
-import "C"
 import (
 	"fmt"
 	"unsafe"
 
 	"github.com/flux-framework/fluxion-go/pkg/types"
 )
+
+/*
+#include <stdlib.h>
+#include "resource/reapi/bindings/c/reapi_cli.h"
+*/
+import "C"
 
 type (
 	ReapiCtx C.struct_reapi_cli_ctx_t
@@ -220,21 +222,40 @@ func (cli *ReapiClient) UpdateAllocate(jobid int, r string) (at int64, overhead 
 	return at, overhead, r_out, err
 }
 
-// Update the resource state with R.
+// Update the resource state with R (grow).
 //
 //	\param h   Opaque handle. How it is used is an implementation
-//		       detail. However, when it is used within a Flux's
+//		   detail. However, when it is used within a Flux's
 //	           service module, it is expected to be a pointer
 //			           to a flux_t object.
-//	\param R_subgraph R String
-//	\return          0 on success; -1 on error.
+//	\param     R_subgraph R String
+//	\return    0 on success; -1 on error.
 //	int reapi_cli_grow (reapi_cli_ctx_t *ctx, const char *R_subgraph);
 func (cli *ReapiClient) Grow(rSubgraph string) (err error) {
 	var resources = C.CString(rSubgraph)
-	defer C.free(unsafe.Pointer(resources))
 
 	fluxerr := (int)(C.reapi_cli_grow((*C.struct_reapi_cli_ctx)(cli.ctx), resources))
+
+	defer C.free(unsafe.Pointer(resources))
 	return retvalToError(fluxerr, "issue resource api client grow")
+}
+
+// Update the resource state (shrink) with R_node_path.
+//
+//	\param h            Opaque handle. How it is used is an implementation
+//		            detail. However, when it is used within a Flux's
+//	                    service module, it is expected to be a pointer
+//			           to a flux_t object.
+//	\param R_node_path R String to prune down
+//	\return          0 on success; -1 on error.
+//	int reapi_cli_shrink (reapi_cli_ctx_t *ctx, const char *R_node_path);
+func (cli *ReapiClient) Shrink(rNodePath string) (err error) {
+	var nodePath = C.CString(rNodePath)
+
+	fluxerr := (int)(C.reapi_cli_shrink((*C.struct_reapi_cli_ctx)(cli.ctx), nodePath))
+
+	defer C.free(unsafe.Pointer(nodePath))
+	return retvalToError(fluxerr, "issue resource api client shrink")
 }
 
 // Cancel cancels the allocation or reservation corresponding to jobid.
