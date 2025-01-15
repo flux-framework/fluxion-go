@@ -232,9 +232,24 @@ func (cli *ReapiClient) UpdateAllocate(jobid int, r string) (at int64, overhead 
 func (cli *ReapiClient) Grow(rSubgraph string) (err error) {
 	var resources = C.CString(rSubgraph)
 	defer C.free(unsafe.Pointer(resources))
-
 	fluxerr := (int)(C.reapi_cli_grow((*C.struct_reapi_cli_ctx)(cli.ctx), resources))
 	return retvalToError(fluxerr, "issue resource api client grow")
+}
+
+// Update the resource state (shrink) with R_node_path.
+//
+//	\param h            Opaque handle. How it is used is an implementation
+//		            detail. However, when it is used within a Flux's
+//	                    service module, it is expected to be a pointer
+//			           to a flux_t object.
+//	\param R_node_path R String to prune down
+//	\return          0 on success; -1 on error.
+//	int reapi_cli_shrink (reapi_cli_ctx_t *ctx, const char *R_node_path);
+func (cli *ReapiClient) Shrink(rNodePath string) (err error) {
+	var nodePath = C.CString(rNodePath)
+	fluxerr := (int)(C.reapi_cli_shrink((*C.struct_reapi_cli_ctx)(cli.ctx), nodePath))
+	defer C.free(unsafe.Pointer(nodePath))
+	return retvalToError(fluxerr, "issue resource api client shrink")
 }
 
 // Cancel cancels the allocation or reservation corresponding to jobid.
