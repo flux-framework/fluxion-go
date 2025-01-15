@@ -17,10 +17,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        test: [["fluxrm/flux-sched:jammy", "/usr/lib"],
+        test: [["fluxrm/flux-sched:noble", "/usr/lib"],
                ["fluxrm/flux-sched:fedora38", "/usr/lib64"],
-               ["fluxrm/flux-sched:bookworm-amd64", "/usr/lib"],
-               ["fluxrm/flux-sched:el8", "/usr/lib64"]]
+               ["fluxrm/flux-sched:bookworm-amd64", "/usr/lib"]]
 
     container:
       image: ${{ matrix.test[0] }}
@@ -33,7 +32,16 @@ jobs:
         go-version: ^1.21
 
     - name: flux-sched build
-      run: git clone https://github.com/flux-framework/flux-sched /opt/flux-sched    
+      run: git clone -b grow-api https://github.com/milroy/flux-sched /opt/flux-sched    
+    - name: flux-sched compile
+      run: |
+        export FLUX_SCHED_VERSION=0.39.0
+        cd /opt/flux-sched
+        cmake -B build
+        make -C build
+        make -C build install
+        cd -
+
     - name: Build
       run: LIB_PREFIX=${{ matrix.test[1] }} make build
     - name: Test
