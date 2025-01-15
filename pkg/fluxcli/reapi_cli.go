@@ -252,6 +252,20 @@ func (cli *ReapiClient) Shrink(rNodePath string) (err error) {
 	return retvalToError(fluxerr, "issue resource api client shrink")
 }
 
+// ShrinkMulti issues multiple shrink requests to the API
+func (cli *ReapiClient) ShrinkMulti(rNodePaths []string) (err error) {
+	var fluxerr int
+	for _, rNodePath := range rNodePaths {
+		var nodePath = C.CString(rNodePath)
+		fluxerr := (int)(C.reapi_cli_shrink((*C.struct_reapi_cli_ctx)(cli.ctx), nodePath))
+		defer C.free(unsafe.Pointer(nodePath))
+		if fluxerr != 0 {
+			return retvalToError(fluxerr, "issue resource api client shrink")
+		}
+	}
+	return retvalToError(fluxerr, "issue resource api client shrink")
+}
+
 // Cancel cancels the allocation or reservation corresponding to jobid.
 //
 //	\param jobid     jobid of the uint64_t type.

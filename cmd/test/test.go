@@ -192,6 +192,12 @@ func main() {
 		log.Fatalf("Error in ReapiClient MatchSatisfy - asking for 4 nodes with only 3 should fail: %v\n", err)
 	}
 
+	fmt.Println("Asking to ShrinkMulti by 2 nodes")
+	err = cli.ShrinkMulti([]string{"/tiny0/rack0/node3", "/tiny0/rack0/node1"})
+	if err != nil {
+		log.Fatalf("Error in ReapiClient ShrinkMulti: %s %s\n", err, cli.GetErrMsg())
+	}
+	fmt.Printf("Shrink request return value: %v\n", err)
 }
 
 func printOutput(reserved bool, allocated string, at int64, jobid uint64, err error) {
