@@ -236,6 +236,35 @@ func (cli *ReapiClient) Cancel(jobid int64, noent_ok bool) (err error) {
 	return retvalToError(fluxerr, "issue resource api client cancel")
 }
 
+// Cancel the allocation or reservation corresponding to jobid.
+//
+//	\param ctx       reapi_module_ctx_t context object
+//	\param jobid     jobid of the uint64_t type.
+//	\param R         R string to remove
+//	\param noent_ok  don't return an error on nonexistent jobid
+//	\param full_removal  don't return an error on nonexistent jobid
+//	\return          0 on success; -1 on error.
+//
+// int reapi_cli_partial_cancel (reapi_cli_ctx_t *ctx,
+//
+//	const uint64_t jobid,
+//	const char *R,
+//	bool noent_ok,
+//	bool *full_removal);
+func (cli *ReapiClient) PartialCancel(jobid int64, r string, noent_ok bool) (bool, error) {
+
+	var full_removal bool
+	var resource = C.CString(r)
+	fluxerr := (int)(C.reapi_cli_partial_cancel((*C.struct_reapi_cli_ctx)(cli.ctx),
+		(C.ulong)(jobid),
+		resource,
+		(C.bool)(noent_ok),
+		(*C.bool)(&full_removal)))
+
+	err := retvalToError(fluxerr, "issue resource api client partial cancel")
+	return full_removal, err
+}
+
 // Info gets the information on the allocation or reservation corresponding to jobid
 //
 //	\param jobid     const jobid of the uint64_t type.

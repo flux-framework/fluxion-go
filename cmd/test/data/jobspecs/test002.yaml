@@ -1,3 +1,4 @@
+# This jobspec has two nodes so we can cancel one
 version: 9999
 resources:
     - type: cluster
@@ -7,7 +8,7 @@ resources:
           count: 1
           with:
             - type: node
-              count: 1
+              count: 2
               with:
                   - type: slot
                     count: 1
