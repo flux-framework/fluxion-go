@@ -39,6 +39,55 @@ func checkErrors(cli *fluxcli.ReapiClient) {
 	}
 }
 
+// Scoped functions for testing satisfy outside of grow, etc.
+func testSatisfy(jgf, jobspec, growJobspec, growJgf string) {
+
+	// Client creation
+	cli := fluxcli.NewReapiClient()
+	err := cli.InitContext(jgf, "{}")
+	if err != nil {
+		log.Fatalf("Error initializing jobspec context for ReapiClient: %v\n", err)
+	}
+	checkErrors(cli)
+
+	fmt.Printf("     Jobspec:\n %s\n", jobspec)
+
+	// Match Allocate without and with reservation
+	fmt.Printf("\n1. Asking to MatchAllocate 2 nodes")
+	reserve := false
+	reserved, allocated, at, _, jobid, err := cli.MatchAllocate(reserve, jobspec)
+	if err != nil {
+		log.Fatalf("Error in ReapiClient MatchAllocate: %v\n", err)
+	}
+	printOutput(reserved, allocated, at, jobid, err)
+
+	// Test MatchSatisfy via Match instead - we control this via the type and can call Match directly
+	fmt.Printf("\n2. Asking to Match 2 nodes via Match and MatchSatisfiability to get back allocation")
+	reserved, allocated, at, _, jobid, err = cli.Match(types.MatchSatisfiability, jobspec)
+	checkErrors(cli)
+	if err != nil {
+		log.Fatalf("Error in ReapiClient Match asking for MatchSatisfiability: %v\n", err)
+	}
+	printOutput(reserved, allocated, at, jobid, err)
+
+	fmt.Printf("\n3. Asking to Match 2 nodes via Match and MatchAllocate to get back allocation")
+	reserved, allocated, at, _, jobid, err = cli.Match(types.MatchAllocateOrElseReserve, jobspec)
+	checkErrors(cli)
+	if err != nil {
+		log.Fatalf("Error in ReapiClient Match asking for MatchSatisfiability: %v\n", err)
+	}
+	printOutput(reserved, allocated, at, jobid, err)
+
+	fmt.Printf("\n4. Asking to Satisfy 2 nodes via Match and MatchSatisfiability to get back allocation")
+	sat, _, err := cli.MatchSatisfy(jobspec)
+	checkErrors(cli)
+	if err != nil {
+		log.Fatalf("Error in ReapiClient Match asking for MatchSatisfiability: %v\n", err)
+	}
+	printSatOutput(sat, err)
+
+}
+
 func main() {
 	jgfPtr := flag.String("jgf", "", "path to jgf")
 	jgfGrowPtr := flag.String("grow", "", "path to grow jgf")
@@ -54,6 +103,12 @@ func main() {
 
 	jgf := readFile(*jgfPtr)
 	growJgf := readFile(*jgfGrowPtr)
+
+	//	testMatch(jgf, jobspec, growJobspec, growJgf)
+	testSatisfy(jgf, jobspec, growJobspec, growJgf)
+}
+
+func testMatch(jgf, jobspec, growJobspec, growJgf string) {
 
 	// Client creation
 	cli := fluxcli.NewReapiClient()
@@ -162,7 +217,6 @@ func main() {
 	fmt.Println("Asking to MatchSatisfy 4 nodes (now IS possible)")
 	sat, overhead, err = cli.MatchSatisfy(growJobspec)
 	checkErrors(cli)
-
 	if err != nil {
 		log.Fatalf("Error in ReapiClient MatchSatisfy: %v\n", err)
 	}
