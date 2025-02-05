@@ -16,6 +16,7 @@ package fluxcli
 import "C"
 import (
 	"fmt"
+	"strconv"
 	"unsafe"
 
 	"github.com/flux-framework/fluxion-go/pkg/types"
@@ -102,14 +103,15 @@ func (cli *ReapiClient) InitContext(jgf string, options string) (err error) {
 func (cli *ReapiClient) Match(
 	match_op types.MatchType,
 	jobspec string,
-) (reserved bool, allocated string, at int64, overhead float64, jobid uint64, err error) {
+) (reserved bool, allocated string, at int64, overhead float64, jobid int64, err error) {
 	var r = C.CString("")
 	spec := C.CString(jobspec)
+	var jobidPassed uint64
 
 	fluxerr := (int)(C.reapi_cli_match((*C.struct_reapi_cli_ctx)(cli.ctx),
 		C.match_op_t(match_op),
 		spec,
-		(*C.ulong)(&jobid),
+		(*C.ulong)(&jobidPassed),
 		(*C.bool)(&reserved),
 		&r,
 		(*C.long)(&at),
@@ -121,6 +123,10 @@ func (cli *ReapiClient) Match(
 	defer C.free(unsafe.Pointer(spec))
 
 	err = retvalToError(fluxerr, "issue resource api client matching allocate")
+	if err != nil {
+		return reserved, allocated, at, overhead, jobid, err
+	}
+	jobid, err = strconv.ParseInt(fmt.Sprintf("%d", jobidPassed), 10, 64)
 	return reserved, allocated, at, overhead, jobid, err
 
 }
@@ -148,7 +154,7 @@ func (cli *ReapiClient) Match(
 func (cli *ReapiClient) MatchAllocate(
 	orelse_reserve bool,
 	jobspec string,
-) (reserved bool, allocated string, at int64, overhead float64, jobid uint64, err error) {
+) (reserved bool, allocated string, at int64, overhead float64, jobid int64, err error) {
 	var match_op types.MatchType
 
 	if orelse_reserve {
@@ -156,7 +162,6 @@ func (cli *ReapiClient) MatchAllocate(
 	} else {
 		match_op = types.MatchAllocate
 	}
-
 	return cli.Match(match_op, jobspec)
 }
 

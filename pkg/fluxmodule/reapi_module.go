@@ -8,13 +8,16 @@
  * SPDX-License-Identifier: LGPL-3.0
 \*****************************************************************************/
 
-package fluxcli
+package fluxmodule
 
-// #include "resource/reapi/bindings/c/reapi_module.h"
+/*
+#include "resource/reapi/bindings/c/reapi_module.h"
+*/
 import "C"
 import (
 	"fmt"
 	"unsafe"
+
 	"github.com/flux-framework/fluxion-go/pkg/types"
 )
 
@@ -93,7 +96,7 @@ func (m *ReapiModule) MatchAllocate(
 	var match_op string
 
 	if orelse_reserve {
-		match_op =types.MatchAllocateOrElseReserve
+		match_op = types.MatchAllocateOrElseReserve
 	} else {
 		match_op = types.MatchAllocate
 	}

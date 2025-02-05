@@ -18,7 +18,7 @@ import (
 
 func TestFluxmodule(t *testing.T) {
 	mod := NewReapiModule()
-	jobspec, err := os.ReadFile("/root/flux-sched/t/data/resource/jobspecs/basics/test001.yaml")
+	jobspec, err := os.ReadFile("./data/test001.yaml")
 	if !mod.HasContext() {
 		t.Errorf("Context is null")
 	}
