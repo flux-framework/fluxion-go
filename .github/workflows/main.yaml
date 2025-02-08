@@ -37,6 +37,14 @@ jobs:
         go-version: ^1.22
 
     - name: flux-sched build
-      run: git clone -b grow-api https://github.com/milroy/flux-sched /opt/flux-sched    
+      run: git clone https://github.com/milroy/flux-sched /opt/flux-sched
+    - name: patch flux sched
+      run: |
+        here=$(pwd)
+        cp .devcontainer/update.patch /opt/flux-sched 
+        cd /opt/flux-sched
+        git apply update.patch
+        mkdir build && cd build && cmake ../ && make -j && sudo make install
+        cd $here
     - name: Test
       run: LIB_PREFIX=${{ matrix.test[1] }} make test-v

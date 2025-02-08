@@ -19,7 +19,7 @@ func TestFluxcliContext(t *testing.T) {
 // NewClient creates a new client for testing
 func NewClient(jgf string) (*ReapiClient, error) {
 	cli := NewReapiClient()
-	err := cli.InitContext(jgf, "{}")
+	err := cli.InitContext(jgf, "{\"prune-filters\": \"ALL:core,ALL:gpu,ALL:memory\"}")
 	if err != nil {
 		fmt.Printf("Error initializing jobspec context for ReapiClient: %v\n", err)
 		fmt.Printf("Errors so far: %s\n", cli.GetErrMsg())
@@ -94,7 +94,7 @@ func TestCancel(t *testing.T) {
 
 	// We should be able to request one node
 	t.Log("Match allocate for 1 node should succeed")
-	reserved, allocated, at, _, jobid, err = cli.MatchAllocate(false, string(cancelJobspec))
+	reserved, allocated, at, _, oneNodeJobid, err := cli.MatchAllocate(false, string(cancelJobspec))
 	if err != nil {
 		t.Logf("Fluxion errors %s\n", cli.GetErrMsg())
 		t.Errorf("matchAllocate for one node after partial cancel: %v\n", err)
@@ -105,13 +105,32 @@ func TestCancel(t *testing.T) {
 	}
 
 	// Cancel should work of the initial job
-	// TODO: this doesn't find the job1 id, need to debug.
-	/*t.Log("cancel for partially cancelled job")
+	t.Log("cancel for partially cancelled job")
 	err = cli.Cancel(initialJobid, false)
 	if err != nil {
 		t.Logf("Fluxion errors %s\n", cli.GetErrMsg())
 		t.Errorf("cancel for partially cancelled job: %v\n", err)
-	}*/
+	}
+
+	// And the one node job
+	t.Log("cancel for one node job")
+	err = cli.Cancel(oneNodeJobid, false)
+	if err != nil {
+		t.Logf("Fluxion errors %s\n", cli.GetErrMsg())
+		t.Errorf("cancel for single node job job: %v\n", err)
+	}
+
+	t.Log("Match allocate for 2 nodes (all of graph resources) should now succeed")
+	reserved, allocated, at, _, jobid, err = cli.MatchAllocate(false, string(jobspec))
+	if err != nil {
+		t.Logf("Fluxion errors %s\n", cli.GetErrMsg())
+		t.Errorf("matchAllocate 2 nodes when graph is empty: %v\n", err)
+	}
+	printOutput(reserved, allocated, at, jobid, err)
+	if allocated == "" {
+		t.Errorf("matchAllocate should not have failed, we have two nodes again.")
+	}
+
 }
 
 func TestMatchAllocate(t *testing.T) {
@@ -199,7 +218,8 @@ func TestMatchAllocate(t *testing.T) {
 
 func printOutput(reserved bool, allocated string, at int64, jobid int64, err error) {
 	fmt.Println("\n\t----Match Allocate output---")
-	fmt.Printf("jobid: %d\nreserved: %t\nallocated: %s\nat: %d\nerror: %v\n", jobid, reserved, allocated, at, err)
+	isAllocated := allocated != ""
+	fmt.Printf("jobid: %d\nreserved: %t\nallocated: %v\nat: %d\nerror: %v\n", jobid, reserved, isAllocated, at, err)
 }
 
 func printSatOutput(sat bool, err error) {

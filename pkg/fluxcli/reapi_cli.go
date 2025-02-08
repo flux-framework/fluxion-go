@@ -67,6 +67,7 @@ func (cli *ReapiClient) InitContext(jgf string, options string) (err error) {
 
 	jobgraph := C.CString(jgf)
 	opts := C.CString(options)
+	fmt.Println(opts)
 	fluxerr := (int)(
 		C.reapi_cli_initialize(
 			(*C.struct_reapi_cli_ctx)(cli.ctx), jobgraph, (opts),
@@ -258,7 +259,7 @@ func (cli *ReapiClient) Cancel(jobid int64, noent_ok bool) (err error) {
 //	bool *full_removal);
 func (cli *ReapiClient) PartialCancel(jobid int64, r string, noent_ok bool) (bool, error) {
 
-	var full_removal bool
+	full_removal := false
 	var resource = C.CString(r)
 	fluxerr := (int)(C.reapi_cli_partial_cancel((*C.struct_reapi_cli_ctx)(cli.ctx),
 		(C.ulong)(jobid),
