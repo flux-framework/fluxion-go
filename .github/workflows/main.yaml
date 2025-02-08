@@ -21,10 +21,10 @@ jobs:
       fail-fast: false
       matrix:
         # container base and lib prefix
-        test: [["fluxrm/flux-sched:jammy", "/usr/lib"],
+        test: [["fluxrm/flux-sched:noble", "/usr/lib"],
                ["fluxrm/flux-sched:fedora40", "/usr/lib64"],
-               ["fluxrm/flux-sched:bookworm-amd64", "/usr/lib"],
-               ["fluxrm/flux-sched:el8", "/usr/lib64"]]
+               ["fluxrm/flux-sched:bookworm-amd64", "/usr/lib"]]
+#               ["fluxrm/flux-sched:el9", "/usr/lib64"]]
 
     container:
       image: ${{ matrix.test[0] }}

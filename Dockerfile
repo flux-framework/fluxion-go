@@ -14,6 +14,9 @@ RUN wget https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz  && tar -xvf go${G
 ENV PATH=$PATH:/usr/local/go/bin:/home/vscode/go/bin
 
 RUN git clone -b grow-api https://github.com/milroy/flux-sched /opt/flux-sched
+COPY .devcontainer/update.patch /opt/flux-sched/update.patch
+RUN cd /opt/flux-sched && \
+    mkdir build && cd build && cmake ../ && make -j && sudo make install
 
 # Assuming installing to /usr/local
 ENV LD_LIBRARY_PATH=/usr/lib:/usr/lib/flux:/usr/local/lib
