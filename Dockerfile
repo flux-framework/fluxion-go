@@ -13,9 +13,9 @@ RUN wget https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz  && tar -xvf go${G
          mv go /usr/local && rm go${GO_VERSION}.linux-amd64.tar.gz
 ENV PATH=$PATH:/usr/local/go/bin:/home/vscode/go/bin
 
-RUN git clone -b grow-api https://github.com/milroy/flux-sched /opt/flux-sched
-COPY .devcontainer/update.patch /opt/flux-sched/update.patch
+RUN git clone -b grow-api-fix https://github.com/researchapps/flux-sched /opt/flux-sched
 RUN cd /opt/flux-sched && \
+    export FLUX_SCHED_VERSION=0.40.0 && \
     mkdir build && cd build && cmake ../ && make -j && sudo make install
 
 # Assuming installing to /usr/local
