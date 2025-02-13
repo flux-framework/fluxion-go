@@ -22,11 +22,13 @@ all: test
 
 .PHONY: test
 test: 	
-	$(COMMONENVVAR) $(BUILDENVVAR) LD_LIBRARY_PATH=$(LD_LIBRARY_PATH) go test -count 1 -run TestCancel -ldflags '-w' ./pkg/fluxcli ./pkg/types
+#	$(COMMONENVVAR) $(BUILDENVVAR) LD_LIBRARY_PATH=$(LD_LIBRARY_PATH) go test -count 1 -run TestCancel -ldflags '-w' ./pkg/fluxcli ./pkg/types
+	$(COMMONENVVAR) $(BUILDENVVAR) LD_LIBRARY_PATH=$(LD_LIBRARY_PATH) go test -ldflags '-w' ./pkg/fluxcli ./pkg/types
 
 .PHONY: test-v
 test-v: 	
-	$(COMMONENVVAR) $(BUILDENVVAR) LD_LIBRARY_PATH=$(LD_LIBRARY_PATH) go test -count 1 -run TestCancel -v -ldflags '-w' ./pkg/fluxcli ./pkg/types
+#	$(COMMONENVVAR) $(BUILDENVVAR) LD_LIBRARY_PATH=$(LD_LIBRARY_PATH) go test -count 1 -run TestCancel -v -ldflags '-w' ./pkg/fluxcli ./pkg/types
+	$(COMMONENVVAR) $(BUILDENVVAR) LD_LIBRARY_PATH=$(LD_LIBRARY_PATH) go test -v -ldflags '-w' ./pkg/fluxcli ./pkg/types
 
 .PHONY: $(LOCALBIN)
 $(LOCALBIN):
