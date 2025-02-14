@@ -14,6 +14,9 @@ RUN wget https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz  && tar -xvf go${G
 ENV PATH=$PATH:/usr/local/go/bin:/home/vscode/go/bin
 
 RUN git clone https://github.com/flux-framework/flux-sched /opt/flux-sched
+RUN cd /opt/flux-sched && \
+    export FLUX_SCHED_VERSION=0.40.0 && \
+    mkdir build && cd build && cmake ../ && make -j && sudo make install
 
 # Assuming installing to /usr/local
 ENV LD_LIBRARY_PATH=/usr/lib:/usr/lib/flux:/usr/local/lib

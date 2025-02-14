@@ -16,6 +16,7 @@ package fluxcli
 import "C"
 import (
 	"fmt"
+	"strconv"
 	"unsafe"
 
 	"github.com/flux-framework/fluxion-go/pkg/types"
@@ -66,6 +67,7 @@ func (cli *ReapiClient) InitContext(jgf string, options string) (err error) {
 
 	jobgraph := C.CString(jgf)
 	opts := C.CString(options)
+	fmt.Println(opts)
 	fluxerr := (int)(
 		C.reapi_cli_initialize(
 			(*C.struct_reapi_cli_ctx)(cli.ctx), jobgraph, (opts),
@@ -102,14 +104,15 @@ func (cli *ReapiClient) InitContext(jgf string, options string) (err error) {
 func (cli *ReapiClient) Match(
 	match_op types.MatchType,
 	jobspec string,
-) (reserved bool, allocated string, at int64, overhead float64, jobid uint64, err error) {
+) (reserved bool, allocated string, at int64, overhead float64, jobid int64, err error) {
 	var r = C.CString("")
 	spec := C.CString(jobspec)
+	var jobidPassed uint64
 
 	fluxerr := (int)(C.reapi_cli_match((*C.struct_reapi_cli_ctx)(cli.ctx),
 		C.match_op_t(match_op),
 		spec,
-		(*C.ulong)(&jobid),
+		(*C.ulong)(&jobidPassed),
 		(*C.bool)(&reserved),
 		&r,
 		(*C.long)(&at),
@@ -121,6 +124,10 @@ func (cli *ReapiClient) Match(
 	defer C.free(unsafe.Pointer(spec))
 
 	err = retvalToError(fluxerr, "issue resource api client matching allocate")
+	if err != nil {
+		return reserved, allocated, at, overhead, jobid, err
+	}
+	jobid, err = strconv.ParseInt(fmt.Sprintf("%d", jobidPassed), 10, 64)
 	return reserved, allocated, at, overhead, jobid, err
 
 }
@@ -148,7 +155,7 @@ func (cli *ReapiClient) Match(
 func (cli *ReapiClient) MatchAllocate(
 	orelse_reserve bool,
 	jobspec string,
-) (reserved bool, allocated string, at int64, overhead float64, jobid uint64, err error) {
+) (reserved bool, allocated string, at int64, overhead float64, jobid int64, err error) {
 	var match_op types.MatchType
 
 	if orelse_reserve {
@@ -156,7 +163,6 @@ func (cli *ReapiClient) MatchAllocate(
 	} else {
 		match_op = types.MatchAllocate
 	}
-
 	return cli.Match(match_op, jobspec)
 }
 
@@ -234,6 +240,35 @@ func (cli *ReapiClient) Cancel(jobid int64, noent_ok bool) (err error) {
 		(C.ulong)(jobid),
 		(C.bool)(noent_ok)))
 	return retvalToError(fluxerr, "issue resource api client cancel")
+}
+
+// Cancel the allocation or reservation corresponding to jobid.
+//
+//	\param ctx       reapi_module_ctx_t context object
+//	\param jobid     jobid of the uint64_t type.
+//	\param R         R string to remove
+//	\param noent_ok  don't return an error on nonexistent jobid
+//	\param full_removal  don't return an error on nonexistent jobid
+//	\return          0 on success; -1 on error.
+//
+// int reapi_cli_partial_cancel (reapi_cli_ctx_t *ctx,
+//
+//	const uint64_t jobid,
+//	const char *R,
+//	bool noent_ok,
+//	bool *full_removal);
+func (cli *ReapiClient) PartialCancel(jobid int64, r string, noent_ok bool) (bool, error) {
+
+	full_removal := false
+	var resource = C.CString(r)
+	fluxerr := (int)(C.reapi_cli_partial_cancel((*C.struct_reapi_cli_ctx)(cli.ctx),
+		(C.ulong)(jobid),
+		resource,
+		(C.bool)(noent_ok),
+		(*C.bool)(&full_removal)))
+
+	err := retvalToError(fluxerr, "issue resource api client partial cancel")
+	return full_removal, err
 }
 
 // Info gets the information on the allocation or reservation corresponding to jobid
