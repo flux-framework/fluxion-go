@@ -14,15 +14,6 @@ import (
 	"testing"
 )
 
-// List of match types, purposefully out of order
-var matchTypes = []MatchType{
-	MatchAllocateWithSatisfiability,
-	MatchAllocateOrElseReserve,
-	MatchAllocate,
-	MatchSatisfiability,
-	MatchUnknown,
-}
-
 func TestToString(t *testing.T) {
 	type test struct {
 		description string
@@ -34,8 +25,9 @@ func TestToString(t *testing.T) {
 		{description: "unknown", input: MatchUnknown, expected: "unknown"},
 		{description: "allocate", input: MatchAllocate, expected: "allocate"},
 		{description: "satisfiability", input: MatchSatisfiability, expected: "satisfiability"},
-		{description: "allocate or else reserve", input: MatchAllocateOrElseReserve, expected: "allocate or else reserve"},
-		{description: "allocate with satisfiability", input: MatchAllocateWithSatisfiability, expected: "allocate with satisfiability"},
+		{description: "allocate_orelse_reserve", input: MatchAllocateOrElseReserve, expected: "allocate_orelse_reserve"},
+		{description: "allocate_with_satisfiability", input: MatchAllocateWithSatisfiability, expected: "allocate_with_satisfiability"},
+		{description: "grow_allocate", input: MatchGrowAllocation, expected: "grow_allocate"},
 	}
 	for _, item := range tests {
 		t.Run(item.description, func(t *testing.T) {
@@ -58,9 +50,10 @@ func TestAsInt(t *testing.T) {
 	tests := []test{
 		{description: "unknown", input: MatchUnknown, expected: 0},
 		{description: "allocate", input: MatchAllocate, expected: 1},
-		{description: "satisfiability", input: MatchSatisfiability, expected: 4},
-		{description: "allocate or else reserve", input: MatchAllocateOrElseReserve, expected: 3},
-		{description: "allocate with satisfiability", input: MatchAllocateWithSatisfiability, expected: 2},
+		{description: "satisfiability", input: MatchSatisfiability, expected: 5},
+		{description: "allocate_orelse_reserve", input: MatchAllocateOrElseReserve, expected: 3},
+		{description: "allocate_with_satisfiability", input: MatchAllocateWithSatisfiability, expected: 2},
+		{description: "grow_allocate", input: MatchGrowAllocation, expected: 4},
 	}
 	for _, item := range tests {
 		t.Run(item.description, func(t *testing.T) {

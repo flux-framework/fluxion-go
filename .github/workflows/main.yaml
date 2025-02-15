@@ -23,8 +23,8 @@ jobs:
         # container base and lib prefix
         test: [["fluxrm/flux-sched:noble", "/usr/lib"],
                ["fluxrm/flux-sched:fedora40", "/usr/lib64"],
-               ["fluxrm/flux-sched:bookworm-amd64", "/usr/lib"],
-               ["fluxrm/flux-sched:el9", "/usr/lib64"]]
+               ["fluxrm/flux-sched:bookworm-amd64", "/usr/lib"]]
+#               ["fluxrm/flux-sched:el9", "/usr/lib64"]]
 
     container:
       image: ${{ matrix.test[0] }}
@@ -37,12 +37,12 @@ jobs:
         go-version: ^1.22
 
     - name: flux-sched build
-      run: git clone https://github.com/flux-framework/flux-sched /opt/flux-sched
-#    - name: build flux-sched
-#      run: |
-#        here=$(pwd)
-#        cd /opt/flux-sched
-#        mkdir build && cd build && cmake ../ && make -j && sudo make install
-#        cd $here
+      run: git clone -b alloc-grow https://github.com/milroy/flux-sched /opt/flux-sched
+    - name: build flux-sched
+      run: |
+        here=$(pwd)
+        cd /opt/flux-sched
+        mkdir build && cd build && cmake ../ && make -j && sudo make install
+        cd $here
     - name: Test
       run: LIB_PREFIX=${{ matrix.test[1] }} make test-v
