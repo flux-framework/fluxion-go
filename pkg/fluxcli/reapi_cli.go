@@ -104,10 +104,21 @@ func (cli *ReapiClient) InitContext(jgf string, options string) (err error) {
 func (cli *ReapiClient) Match(
 	match_op types.MatchType,
 	jobspec string,
-) (reserved bool, allocated string, at int64, overhead float64, jobid int64, err error) {
+	jobid int64,
+) (bool, string, int64, float64, int64, error) {
+
+	// Variables we are preparing to return
+	var reserved bool
+	var at int64
+	var overhead float64
+	var err error
+
+	// C variables we need for request - "R" and the jobspec
 	var r = C.CString("")
 	spec := C.CString(jobspec)
-	var jobidPassed uint64
+
+	// We assume the job is not negative (signed)
+	jobidPassed := uint64(jobid)
 
 	fluxerr := (int)(C.reapi_cli_match((*C.struct_reapi_cli_ctx)(cli.ctx),
 		C.match_op_t(match_op),
@@ -118,7 +129,8 @@ func (cli *ReapiClient) Match(
 		(*C.long)(&at),
 		(*C.double)(&overhead)))
 
-	allocated = C.GoString(r)
+	allocated := C.GoString(r)
+	fmt.Printf("After job id %d", jobidPassed)
 
 	defer C.free(unsafe.Pointer(r))
 	defer C.free(unsafe.Pointer(spec))
@@ -129,7 +141,6 @@ func (cli *ReapiClient) Match(
 	}
 	jobid, err = strconv.ParseInt(fmt.Sprintf("%d", jobidPassed), 10, 64)
 	return reserved, allocated, at, overhead, jobid, err
-
 }
 
 // MatchAllocate matches a jobspec to the "best" resources and either allocate
@@ -155,7 +166,7 @@ func (cli *ReapiClient) Match(
 func (cli *ReapiClient) MatchAllocate(
 	orelse_reserve bool,
 	jobspec string,
-) (reserved bool, allocated string, at int64, overhead float64, jobid int64, err error) {
+) (bool, string, int64, float64, int64, error) {
 	var match_op types.MatchType
 
 	if orelse_reserve {
@@ -163,7 +174,16 @@ func (cli *ReapiClient) MatchAllocate(
 	} else {
 		match_op = types.MatchAllocate
 	}
-	return cli.Match(match_op, jobspec)
+	// MatchAllocate we provide an empty (unset) jobid
+	return cli.Match(match_op, jobspec, int64(0))
+}
+
+// MatchGrowAllocate calls Match and requests to Grow
+func (cli *ReapiClient) MatchGrowAllocate(
+	jobspec string,
+	jobid int64,
+) (bool, string, int64, float64, int64, error) {
+	return cli.Match(types.MatchGrowAllocation, jobspec, jobid)
 }
 
 // MatchSatisfy runs satisfiability check on jobspec.

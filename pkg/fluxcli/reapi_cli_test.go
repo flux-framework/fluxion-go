@@ -27,6 +27,84 @@ func NewClient(jgf string) (*ReapiClient, error) {
 	return cli, err
 }
 
+/*
+
+cmds010="${cmd_dir}/cmds10.in"
+test010_desc="grow existing job to occupy all resources; can't occupy more than exist"
+test_expect_success "${test010_desc}" '
+    sed "s~@TEST_SRCDIR@~${SHARNESS_TEST_SRCDIR}~g" ${cmds010} > cmds010 &&
+    ${query} -L ${jgf} -F jgf -f jgf -S CA -P low -t 010.R.out \
+    < cmds010 &&
+    test_cmp 010.R.out ${exp_dir}/010.R.out
+'
+
+cmds011="${cmd_dir}/cmds11.in"
+test011_desc="grow existing job four times, grow graph and grow allocation onto new resources; can't occupy more than exist"
+test_expect_success "${test010_desc}" '
+    sed "s~@TEST_SRCDIR@~${SHARNESS_TEST_SRCDIR}~g" ${cmds011} > cmds011 &&
+    ${query} -L ${jgf} -F jgf -f jgf -S CA -P low -t 011.R.out \
+    < cmds011 &&
+    test_cmp 011.R.out ${exp_dir}/011.R.out
+'
+*/
+
+func TestGrowAllocate(t *testing.T) {
+
+	// This graph has 1 node, 2 sockets, each with 18 cores
+	jgf, err := os.ReadFile("./data/grow-allocation/node-test.json")
+	if err != nil {
+		t.Errorf("Error reading JGF file: %s", err)
+	}
+	cli, err := NewClient(string(jgf))
+	if err != nil {
+		t.Errorf("creating new client %v\n", err)
+	}
+
+	// This job asks for half the entire graph - 1 node, 18 cores
+	jobspec, err := os.ReadFile("./data/grow-allocation/test006.yaml")
+	if err != nil {
+		t.Log("Error reading grow-allocate initial jobspec file")
+	}
+	// Allocate the initial job (described above)
+	t.Log("allocate initial job to take up half of graph")
+	reserved, allocated, at, _, jobid, err := cli.MatchAllocate(false, string(jobspec))
+	if err != nil {
+		t.Logf("Fluxion errors %s\n", cli.GetErrMsg())
+		t.Errorf("matchAllocate without reservations failed %v\n", err)
+	}
+	printOutput(reserved, allocated, at, jobid, err)
+
+	t.Log("request to grow allocate first time should succeed")
+	reserved, allocated, at, _, jobid, err = cli.MatchGrowAllocate(string(jobspec), jobid)
+	if err != nil {
+		t.Logf("Fluxion errors %s\n", cli.GetErrMsg())
+		t.Errorf("matchGrowAllocate failed %v\n", err)
+	}
+	printOutput(reserved, allocated, at, jobid, err)
+
+	t.Log("request to grow allocate second time should alert resources are not available")
+	reserved, allocated, at, _, jobid, err = cli.MatchGrowAllocate(string(jobspec), jobid)
+	if err != nil {
+		t.Logf("Fluxion errors %s\n", cli.GetErrMsg())
+		t.Errorf("matchGrowAllocate failed %v\n", err)
+	}
+	printOutput(reserved, allocated, at, jobid, err)
+	if allocated != "" {
+		t.Error("second group should not work without resources")
+		t.Error("initial allocation failed (is empty)")
+	}
+
+	// Cancel should work of the initial job
+	t.Log("cancel for partially cancelled job")
+	err = cli.Cancel(jobid, false)
+
+	if err != nil {
+		t.Logf("Fluxion errors %s\n", cli.GetErrMsg())
+		t.Errorf("cancel for grown job: %v\n", err)
+	}
+
+}
+
 func TestCancel(t *testing.T) {
 
 	// This job takes up the entire graph
@@ -130,7 +208,6 @@ func TestCancel(t *testing.T) {
 	if allocated == "" {
 		t.Errorf("matchAllocate should not have failed, we have two nodes again.")
 	}
-
 }
 
 func TestMatchAllocate(t *testing.T) {
@@ -169,7 +246,7 @@ func TestMatchAllocate(t *testing.T) {
 	printOutput(reserved, allocated, at, jobid, err)
 
 	// Same call, but directly to Match specifying the match operator type
-	reserved, allocated, at, overhead, jobid, err = cli.Match(types.MatchAllocate, string(jobspec))
+	reserved, allocated, at, overhead, jobid, err = cli.Match(types.MatchAllocate, string(jobspec), int64(0))
 	if err != nil {
 		t.Logf("Fluxion errors %s\n", cli.GetErrMsg())
 		t.Errorf("match with match_op MatchAllocate %v\n", err)
@@ -177,7 +254,7 @@ func TestMatchAllocate(t *testing.T) {
 	printOutput(reserved, allocated, at, jobid, err)
 
 	// Same, but with match_op match allocate or else reserve
-	reserved, allocated, at, overhead, jobid, err = cli.Match(types.MatchAllocateOrElseReserve, string(jobspec))
+	reserved, allocated, at, overhead, jobid, err = cli.Match(types.MatchAllocateOrElseReserve, string(jobspec), int64(0))
 	if err != nil {
 		t.Logf("Fluxion errors %s\n", cli.GetErrMsg())
 		t.Errorf("match with match_op MatchAllocateElseReserve %v\n", err)
@@ -185,7 +262,7 @@ func TestMatchAllocate(t *testing.T) {
 	printOutput(reserved, allocated, at, jobid, err)
 
 	// Same, but with satisfy
-	reserved, allocated, at, overhead, jobid, err = cli.Match(types.MatchAllocateWithSatisfiability, string(jobspec))
+	reserved, allocated, at, overhead, jobid, err = cli.Match(types.MatchAllocateWithSatisfiability, string(jobspec), int64(0))
 	if err != nil {
 		t.Logf("Fluxion errors %s\n", cli.GetErrMsg())
 		t.Errorf("Error in ReapiClient MatchAllocate: %v\n", err)
@@ -218,8 +295,7 @@ func TestMatchAllocate(t *testing.T) {
 
 func printOutput(reserved bool, allocated string, at int64, jobid int64, err error) {
 	fmt.Println("\n\t----Match Allocate output---")
-	isAllocated := allocated != ""
-	fmt.Printf("jobid: %d\nreserved: %t\nallocated: %v\nat: %d\nerror: %v\n", jobid, reserved, isAllocated, at, err)
+	fmt.Printf("jobid: %d\nreserved: %t\nallocated: %s\nat: %d\nerror: %v\n", jobid, reserved, allocated, at, err)
 }
 
 func printSatOutput(sat bool, err error) {
