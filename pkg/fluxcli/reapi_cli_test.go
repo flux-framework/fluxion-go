@@ -27,6 +27,45 @@ func NewClient(jgf string) (*ReapiClient, error) {
 	return cli, err
 }
 
+func TestFind(t *testing.T) {
+
+	// This job takes up the entire graph
+	jgf, err := os.ReadFile("./data/find/tiny.json")
+	if err != nil {
+		t.Log("Error reading JGF file")
+	}
+	cli, err := NewClient(string(jgf))
+	if err != nil {
+		t.Errorf("creating new client %v\n", err)
+	}
+
+	// This takes up the entire graph
+	jobspec, err := os.ReadFile("./data/find/full.yaml")
+	if err != nil {
+		t.Log("Error reading cancel initial jobspec file")
+	}
+
+	t.Log("allocate initial job to take up entire graph")
+	reserved, allocated, at, _, initialJobid, err := cli.MatchAllocate(false, string(jobspec))
+	if err != nil {
+		t.Logf("Fluxion errors %s\n", cli.GetErrMsg())
+		t.Errorf("matchAllocate reservation false %v\n", err)
+	}
+	printOutput(reserved, allocated, at, initialJobid, err)
+	if allocated == "" {
+		t.Error("find full allocation should succeed")
+	}
+
+	t.Log("find status=up")
+	out, err := cli.Find("status=up")
+	if err != nil {
+		t.Logf("Fluxion errors %s\n", cli.GetErrMsg())
+		t.Errorf("find status=up %v\n", err)
+	}
+	t.Log(out)
+
+}
+
 func TestCancel(t *testing.T) {
 
 	// This job takes up the entire graph

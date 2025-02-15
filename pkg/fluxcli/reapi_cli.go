@@ -42,7 +42,7 @@ func NewReapiClient() *ReapiClient {
 // Given an integer return code, convert to go error
 // Also provide a meaningful string to the developer user
 func retvalToError(code int, message string) error {
-	if code == 0 {
+	if code >= 0 {
 		return nil
 	}
 	return fmt.Errorf(message+" %d", code)
@@ -75,6 +75,22 @@ func (cli *ReapiClient) InitContext(jgf string, options string) (err error) {
 	)
 
 	return retvalToError(fluxerr, "issue initializing resource api client")
+}
+
+// int reapi_cli_t::find (void *h, const std::string &criteria, std::string &out)
+func (cli *ReapiClient) Find(criteria string) (string, error) {
+	var out = C.CString("")
+	findCriteria := C.CString(criteria)
+
+	fluxerr := (int)(C.reapi_cli_find((*C.struct_reapi_cli_ctx)(cli.ctx),
+		findCriteria,
+		&out))
+	result := C.GoString(out)
+	defer C.free(unsafe.Pointer(out))
+	defer C.free(unsafe.Pointer(findCriteria))
+
+	err := retvalToError(fluxerr, "issue resource api client find")
+	return result, err
 }
 
 // Match matches a jobspec to the "best" resources based on match option.
