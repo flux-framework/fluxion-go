@@ -77,6 +77,22 @@ func (cli *ReapiClient) InitContext(jgf string, options string) (err error) {
 	return retvalToError(fluxerr, "issue initializing resource api client")
 }
 
+// int reapi_cli_t::find (void *h, const std::string &criteria, std::string &out)
+func (cli *ReapiClient) Find(criteria string) (string, error) {
+	var out = C.CString("")
+	findCriteria := C.CString(criteria)
+
+	fluxerr := (int)(C.reapi_cli_find((*C.struct_reapi_cli_ctx)(cli.ctx),
+		findCriteria,
+		&out))
+	result := C.GoString(out)
+	defer C.free(unsafe.Pointer(out))
+	defer C.free(unsafe.Pointer(findCriteria))
+
+	err := retvalToError(fluxerr, "issue resource api client find")
+	return result, err
+}
+
 // Match matches a jobspec to the "best" resources based on match option.
 
 // The best resources are determined by the selected match policy.

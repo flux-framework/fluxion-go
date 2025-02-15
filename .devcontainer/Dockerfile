@@ -19,7 +19,8 @@ RUN wget https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz  && tar -xvf go${G
          mv go /usr/local && rm go${GO_VERSION}.linux-amd64.tar.gz
 ENV PATH=$PATH:/usr/local/go/bin:/home/vscode/go/bin
 
-RUN git clone https://github.com/flux-framework/flux-sched /opt/flux-sched
+RUN git clone -b find-api https://github.com/milroy/flux-sched /opt/flux-sched && \
+    cd /opt/flux-sched && mkdir build && cd ./build && cmake ../ && make -j4 && make install
 
 # Add the group and user that match our ids
 RUN groupadd -g ${USER_GID} ${USERNAME} && \
