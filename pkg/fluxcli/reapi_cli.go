@@ -42,7 +42,7 @@ func NewReapiClient() *ReapiClient {
 // Given an integer return code, convert to go error
 // Also provide a meaningful string to the developer user
 func retvalToError(code int, message string) error {
-	if code == 0 {
+	if code >= 0 {
 		return nil
 	}
 	return fmt.Errorf(message+" %d", code)
